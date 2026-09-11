@@ -5,7 +5,6 @@
     <title>TP 03 - WebVR avec A-Frame</title>
     <!-- Importation d'A-Frame, d'une physique compatible et des composants extras -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <!-- Utilisation d'un système physique mis à jour pour éviter l'erreur THREE.Geometry -->
     <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
     
@@ -30,7 +29,7 @@
         <!-- Sol -->
         <a-plane position="0 0 0" rotation="-90 0 0" width="30" height="30" color="#7BC8A4" shadow="receive: true" static-body></a-plane>
 
-        <!-- OBJETS 3D AVEC GRABBABLE (Exercice 2) -->
+        <!-- OBJETS 3D -->
         <a-box class="collidable grabbable" position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9" shadow="cast: true; receive: true" dynamic-body></a-box>
         <a-sphere class="collidable grabbable" position="0 1.25 -5" radius="1.25" color="#EF2D5E" shadow="cast: true; receive: true" dynamic-body></a-sphere>
         <a-cylinder class="collidable grabbable" position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D" shadow="cast: true; receive: true" dynamic-body></a-cylinder>
@@ -38,41 +37,39 @@
         <!-- PLAYER RIG & CONTRÔLEURS VR -->
         <a-entity id="rig" movement-controls="fly: false; speed: 0.1" position="0 0 2">
             
-    <!-- Caméra avec des contrôles de regard assouplis pour éviter que ce soit trop rapide -->
-<a-entity camera position="0 1.6 0" look-controls="pointerLockEnabled: true; magicWindowTrackingEnabled: true">
-    <a-cursor></a-cursor>
-    
-    <!-- L'arme FPS sur PC -->
-    <a-entity id="pc-weapon" 
-              gltf-model="#gun-model" 
-              position="0.3 -0.3 -0.5" 
-              rotation="0 180 0" 
-              scale="0.05 0.05 0.05">
-    </a-entity>
-</a-entity>
+            <!-- Caméra -->
+            <a-entity camera position="0 1.6 0" look-controls="pointerLockEnabled: true; magicWindowTrackingEnabled: true">
+                <a-cursor></a-cursor>
+                
+                <!-- L'arme FPS sur PC -->
+                <a-entity id="pc-weapon" 
+                         gltf-model="#gun-model" 
+                         position="0.3 -0.3 -0.5" 
+                         rotation="0 180 0" 
+                         scale="0.05 0.05 0.05">
+                </a-entity>
+            </a-entity>
             
             <!-- Contrôleur Gauche VR -->
             <a-entity id="left-hand" 
-                      oculus-touch-controls="hand: left" 
-                      sphere-collider="objects: .grabbable" 
-                      grab>
+                     oculus-touch-controls="hand: left" 
+                     sphere-collider="objects: .grabbable" 
+                     grab>
             </a-entity>
             
-            <!-- Contrôleur Droit VR (Possède l'arme en VR si vous êtes dans un casque) -->
+            <!-- Contrôleur Droit VR -->
             <a-entity id="right-hand" 
-                      oculus-touch-controls="hand: right" 
-                      laser-controls 
-                      raycaster="objects: .collidable, .target"
-                      sphere-collider="objects: .grabbable"
-                      grab>
-                <!-- Optionnel : Si vous voulez que le modèle 3D s'affiche sur la main en VR -->
+                     oculus-touch-controls="hand: right" 
+                     laser-controls 
+                     raycaster="objects: .collidable, .target"
+                     sphere-collider="objects: .grabbable"
+                     grab>
                 <a-entity gltf-model="#gun-model" position="0 0 0" rotation="0 180 0" scale="0.05 0.05 0.05"></a-entity>
             </a-entity>
         </a-entity>
 
-        <!-- CIBLES (Exercice 4) -->
-        <a-entity id="targets-container">
-        </a-entity>
+        <!-- CIBLES -->
+        <a-entity id="targets-container"></a-entity>
 
     </a-scene>
 </body>
