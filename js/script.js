@@ -1,52 +1,59 @@
-// --- GESTION DU TIR INDÉPENDANT POUR CHAQUE MAIN (BASÉ SUR LE RAYCASTER NATIF) ---
+// --- GESTION DU TIR VIA LE VISEUR CENTRAL DE LA CAMÉRA ---
 window.addEventListener('DOMContentLoaded', () => {
+    // Écoute du clic sur l'écran (PC) ou gâchette VR
+    window.addEventListener('mousedown', () => {
+        shootFromCamera();
+    });
+
     const rightHand = document.querySelector('#right-hand');
     const leftHand = document.querySelector('#left-hand');
-    
-    // Ciblage et tir spécifique à la main droite
+
     if (rightHand) {
-        rightHand.addEventListener('triggerdown', function () {
-            shootFromHand(rightHand);
+        rightHand.addEventListener('triggerdown', () => {
+            shootFromCamera();
         });
     }
 
-    // Ciblage et tir spécifique à la main gauche
     if (leftHand) {
-        leftHand.addEventListener('triggerdown', function () {
-            shootFromHand(leftHand);
+        leftHand.addEventListener('triggerdown', () => {
+            shootFromCamera();
         });
     }
-
-    // Secours PC (souris)
-    window.addEventListener('mousedown', () => {
-        if (rightHand) shootFromHand(rightHand);
-    });
 });
 
-function shootFromHand(handEl) {
+function shootFromCamera() {
     const scene = document.querySelector('a-scene');
     const hitSound = document.querySelector('#hit-sound');
+    const cameraEl = document.querySelector('[camera]');
     
-    if (!scene || !handEl) return;
+    if (!scene || !cameraEl) return;
 
     const worldPos = new THREE.Vector3();
     const worldDir = new THREE.Vector3();
 
-    // 1. Récupération exacte de la position et de l'orientation mondiale de CETTE main spécifique
-    handEl.object3D.getWorldPosition(worldPos);
-    const localDirection = new THREE.Vector3(0, 0, -1);
-    const worldQuaternion = new THREE.Quaternion();
-    handEl.object3D.getWorldQuaternion(worldQuaternion);
-    worldDir.copy(localDirection).applyQuaternion(worldQuaternion);
-
-    // 2. Utilisation directe du Raycaster de la main pour toucher précisément ce que son laser vise
-    const raycasterComp = handEl.components.raycaster;
+    // 1. On récupère la position et la direction exacte où regarde la caméra (le centre de l'écran / le viseur)
+    const cameraObj = cameraEl.object3D;
+    cameraObj.getWorldPosition(worldPos);
     
-    if (raycasterComp && raycasterComp.intersectedEls.length > 0) {
-        // On récupère la première cible valide (.target) touchée par le laser de cette manette
-        const targetEl = raycasterComp.intersectedEls.find(el => el.classList.contains('target'));
+    const localDir = new THREE.Vector3(0, 0, -1);
+    const worldQuaternion = new THREE.Quaternion();
+    cameraObj.getWorldQuaternion(worldQuaternion);
+    worldDir.copy(localDir).applyQuaternion(worldQuaternion);
+
+    // 2. Raycaster basé sur le centre de l'écran
+    const raycaster = new THREE.Raycaster(worldPos, worldDir);
+    const targets = Array.from(document.querySelectorAll('.target'));
+    const intersects = raycaster.intersectObjects(targets.map(t => t.object3D), true);
+
+    if (intersects.length > 0) {
+        let targetEl = intersects[0].object.el;
+        
+        while (targetEl && !targetEl.classList.contains('target')) {
+            targetEl = targetEl.parentNode;
+        }
 
         if (targetEl && targetEl.parentNode) {
+            // Destruction de la cible violette visée par le viseur central
             targetEl.parentNode.removeChild(targetEl);
 
             if (hitSound) {
@@ -56,8 +63,8 @@ function shootFromHand(handEl) {
         }
     }
 
-    // 3. Balle visuelle rouge partie de cette main précise
-    worldPos.addScaledVector(worldDir, 0.2); 
+    // 3. Effet visuel de la balle partie du centre de la caméra
+    worldPos.addScaledVector(worldDir, 0.5); 
     const bullet = document.createElement('a-sphere');
     bullet.setAttribute('radius', '0.04');
     bullet.setAttribute('color', '#FF0000');
