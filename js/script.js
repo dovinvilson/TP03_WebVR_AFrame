@@ -1,29 +1,29 @@
-// --- GESTION DU TIR ET DES INTERACTIONS (DEUX MAINS) ---
+// --- GESTION DU TIR INDÉPENDANT POUR CHAQUE MAIN ---
 window.addEventListener('DOMContentLoaded', () => {
     const rightHand = document.querySelector('#right-hand');
     const leftHand = document.querySelector('#left-hand');
     
-    // Déclenchement en VR (gâchette du contrôleur droit)
+    // Ciblage et tir spécifique à la main droite
     if (rightHand) {
         rightHand.addEventListener('triggerdown', function () {
-            shootWeapon(rightHand);
+            shootFromHand(rightHand);
         });
     }
 
-    // Déclenchement en VR (gâchette du contrôleur gauche)
+    // Ciblage et tir spécifique à la main gauche
     if (leftHand) {
         leftHand.addEventListener('triggerdown', function () {
-            shootWeapon(leftHand);
+            shootFromHand(leftHand);
         });
     }
 
-    // Déclenchement de secours (clic de souris PC)
+    // Secours PC (souris)
     window.addEventListener('mousedown', () => {
-        if (rightHand) shootWeapon(rightHand);
+        if (rightHand) shootFromHand(rightHand);
     });
 });
 
-function shootWeapon(handEl) {
+function shootFromHand(handEl) {
     const scene = document.querySelector('a-scene');
     const hitSound = document.querySelector('#hit-sound');
     
@@ -32,16 +32,16 @@ function shootWeapon(handEl) {
     const worldPos = new THREE.Vector3();
     const worldDir = new THREE.Vector3();
 
-    // Récupération de la position et de l'orientation mondiale de la main qui tire
-    if (handEl.object3D) {
-        handEl.object3D.getWorldPosition(worldPos);
-        const localDir = new THREE.Vector3(0, 0, -1);
-        worldDir.copy(localDir).applyQuaternion(handEl.object3D.getWorldQuaternion(new THREE.Quaternion()));
-    } else {
-        return;
-    }
+    // 1. Récupération exacte de la position mondiale de CETte main spécifique
+    handEl.object3D.getWorldPosition(worldPos);
 
-    // Raycaster pour détecter et détruire instantanément la cible violette visée
+    // 2. Calcul de la direction propre à cette manette (axe -Z local transformé en monde)
+    const localDirection = new THREE.Vector3(0, 0, -1);
+    const worldQuaternion = new THREE.Quaternion();
+    handEl.object3D.getWorldQuaternion(worldQuaternion);
+    worldDir.copy(localDirection).applyQuaternion(worldQuaternion);
+
+    // 3. Raycaster indépendant pour cette arme
     const raycaster = new THREE.Raycaster(worldPos, worldDir);
     const targets = Array.from(document.querySelectorAll('.target'));
     const intersects = raycaster.intersectObjects(targets.map(t => t.object3D), true);
@@ -63,7 +63,7 @@ function shootWeapon(handEl) {
         }
     }
 
-    // Effet visuel : petite balle rouge rapide qui part de la main active
+    // 4. Balle visuelle partie de cette main précise
     worldPos.addScaledVector(worldDir, 0.2); 
     const bullet = document.createElement('a-sphere');
     bullet.setAttribute('radius', '0.04');
@@ -89,7 +89,7 @@ function shootWeapon(handEl) {
 // --- GÉNÉRATION AUTOMATIQUE DES CIBLES VIOLETTES ---
 AFRAME.registerComponent('target-spawner', {
     init: function () {
-        this.spawnInterval = 3000; // Toutes les 3 secondes
+        this.spawnInterval = 3000;
         this.timer = 0;
         
         setTimeout(() => {
