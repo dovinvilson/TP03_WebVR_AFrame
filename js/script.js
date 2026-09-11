@@ -18,17 +18,31 @@ window.addEventListener('DOMContentLoaded', () => {
 function shootWeapon() {
     const scene = document.querySelector('a-scene');
     const hitSound = document.querySelector('#hit-sound');
+    const rightHand = document.querySelector('#right-hand');
     const cameraEl = document.querySelector('[camera], a-camera');
     
-    if (!scene || !cameraEl) return;
+    if (!scene) return;
 
     const worldPos = new THREE.Vector3();
     const worldDir = new THREE.Vector3();
 
-    // Le tir part toujours du centre de la caméra (là où se trouve le réticule / curseur)
-    cameraEl.object3D.getWorldPosition(worldPos);
-    cameraEl.object3D.getWorldDirection(worldDir);
-    worldDir.negate();
+    // VÉRIFICATION VR vs PC (Notion de World Position du contrôleur)
+    // Si on est en VR et que le contrôleur droit est connecté et visible dans l'espace
+    if (rightHand && rightHand.object3D && rightHand.object3D.visible) {
+        // Le tir part de la position mondiale (World Position) de la manette droite
+        rightHand.object3D.getWorldPosition(worldPos);
+        
+        // On récupère la direction vers l'avant de la manette
+        const localDir = new THREE.Vector3(0, 0, -1);
+        worldDir.copy(localDir).applyQuaternion(rightHand.object3D.getWorldQuaternion(new THREE.Quaternion()));
+    } else if (cameraEl) {
+        // Mode PC : le tir part de la caméra (milieu de l'écran)
+        cameraEl.object3D.getWorldPosition(worldPos);
+        cameraEl.object3D.getWorldDirection(worldDir);
+        worldDir.negate();
+    } else {
+        return;
+    }
 
     // Raycaster pour détecter et détruire instantanément la cible violette visée
     const raycaster = new THREE.Raycaster(worldPos, worldDir);
@@ -52,8 +66,8 @@ function shootWeapon() {
         }
     }
 
-    // Effet visuel : petite balle rouge rapide qui part du point de tir
-    worldPos.addScaledVector(worldDir, 0.4); 
+    // Effet visuel : petite balle rouge rapide qui part un tout petit peu devant la manette pour éviter l'auto-collision
+    worldPos.addScaledVector(worldDir, 0.2); 
     const bullet = document.createElement('a-sphere');
     bullet.setAttribute('radius', '0.04');
     bullet.setAttribute('color', '#FF0000');
