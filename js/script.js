@@ -1,3 +1,29 @@
+// --- COMPOSANT POUR MASQUER LES MAINS HORS VR ---
+AFRAME.registerComponent('hide-on-desktop', {
+    init: function () {
+        const el = this.el;
+        
+        // Par défaut sur PC, on cache l'objet
+        el.setAttribute('visible', false);
+        if (el.components.raycaster) el.components.raycaster.pause();
+
+        // Quand on entre en mode VR (casque connecté)
+        el.sceneEl.addEventListener('enter-vr', () => {
+            if (el.sceneEl.is('vr-mode')) {
+                el.setAttribute('visible', true);
+                if (el.components.raycaster) el.components.raycaster.play();
+            }
+        });
+
+        // Quand on sort du mode VR
+        el.sceneEl.addEventListener('exit-vr', () => {
+            el.setAttribute('visible', false);
+            if (el.components.raycaster) el.components.raycaster.pause();
+        });
+    }
+});
+
+
 // --- GESTION DU TIR VIA LE VISEUR CENTRAL DE LA CAMÉRA ---
 window.addEventListener('DOMContentLoaded', () => {
     // Écoute du clic sur l'écran (PC) ou gâchette VR

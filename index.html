@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>TP 03 - WebVR avec A-Frame</title>
-    <!-- Importation d'A-Frame, d'une physique compatible et des composants extras -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
@@ -14,53 +13,45 @@
 <body>
     <a-scene physics="gravity: -9.8; debug: false">
         
-        <!-- ASSETS : Chargement de l'arme 3D et du son -->
         <a-assets>
             <a-asset-item id="gun-model" src="assets/models/gun.glb"></a-asset-item>
             <audio id="hit-sound" src="assets/sounds/hit.mp3"></audio>
         </a-assets>
 
-        <!-- LUMIÈRES -->
         <a-light type="ambient" color="#BBB" intensity="0.6"></a-light>
         <a-light type="directional" color="#FFF" intensity="0.8" position="-1 4 2" cast-shadow="true"
                  shadow-camera-left="-10" shadow-camera-right="10" shadow-camera-top="10" shadow-camera-bottom="-10">
         </a-light>
 
-        <!-- Sol -->
         <a-plane position="0 0 0" rotation="-90 0 0" width="30" height="30" color="#7BC8A4" shadow="receive: true" static-body></a-plane>
 
-        <!-- OBJETS 3D -->
         <a-box class="collidable grabbable" position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9" shadow="cast: true; receive: true" dynamic-body></a-box>
         <a-sphere class="collidable grabbable" position="0 1.25 -5" radius="1.25" color="#EF2D5E" shadow="cast: true; receive: true" dynamic-body></a-sphere>
         <a-cylinder class="collidable grabbable" position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D" shadow="cast: true; receive: true" dynamic-body></a-cylinder>
 
-        <!-- PLAYER RIG & CONTRÔLEURS VR -->
         <a-entity id="rig" movement-controls="fly: false; speed: 0.1" position="0 0 2">
             
-            <!-- Caméra -->
             <a-entity camera position="0 1.6 0" look-controls="pointerLockEnabled: true; magicWindowTrackingEnabled: true">
-                <!-- Viseur central configuré pour cibler les éléments de classe .target et .collidable -->
                 <a-cursor raycaster="objects: .collidable, .target"></a-cursor>
             </a-entity>
             
-            <!-- Contrôleur Gauche VR (avec le modèle 3D de l'arme) -->
             <a-entity id="left-hand" 
                      oculus-touch-controls="hand: left" 
+                     hide-on-desktop
                      sphere-collider="objects: .grabbable" 
                      grab>
                 <a-entity gltf-model="#gun-model" position="0 0 0" rotation="0 180 0" scale="0.05 0.05 0.05"></a-entity>
             </a-entity>
             
-            <!-- Contrôleur Droit VR (avec le modèle 3D de l'arme) -->
             <a-entity id="right-hand" 
                      oculus-touch-controls="hand: right" 
+                     hide-on-desktop
                      sphere-collider="objects: .grabbable"
                      grab>
                 <a-entity gltf-model="#gun-model" position="0 0 0" rotation="0 180 0" scale="0.05 0.05 0.05"></a-entity>
             </a-entity>
         </a-entity>
 
-        <!-- CIBLES -->
         <a-entity id="targets-container"></a-entity>
 
     </a-scene>
