@@ -42,21 +42,21 @@
                 <a-cursor></a-cursor>
             </a-entity>
             
-            <!-- Contrôleur Gauche VR -->
+            <!-- Contrôleur Gauche VR avec son propre ciblage laser indépendant -->
             <a-entity id="left-hand" 
                      oculus-touch-controls="hand: left" 
-                     laser-controls 
-                     raycaster="objects: .collidable, .target"
+                     laser-controls="hand: left" 
+                     raycaster="objects: .collidable, .target; showLine: true"
                      sphere-collider="objects: .grabbable" 
                      grab>
                 <a-entity gltf-model="#gun-model" position="0 0 0" rotation="0 180 0" scale="0.05 0.05 0.05"></a-entity>
             </a-entity>
             
-            <!-- Contrôleur Droit VR -->
+            <!-- Contrôleur Droit VR avec son propre ciblage laser indépendant -->
             <a-entity id="right-hand" 
                      oculus-touch-controls="hand: right" 
-                     laser-controls 
-                     raycaster="objects: .collidable, .target"
+                     laser-controls="hand: right" 
+                     raycaster="objects: .collidable, .target; showLine: true"
                      sphere-collider="objects: .grabbable"
                      grab>
                 <a-entity gltf-model="#gun-model" position="0 0 0" rotation="0 180 0" scale="0.05 0.05 0.05"></a-entity>

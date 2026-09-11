@@ -1,4 +1,4 @@
-// --- GESTION DU TIR INDÉPENDANT POUR CHAQUE MAIN ---
+// --- GESTION DU TIR INDÉPENDANT POUR CHAQUE MAIN (BASÉ SUR LE RAYCASTER NATIF) ---
 window.addEventListener('DOMContentLoaded', () => {
     const rightHand = document.querySelector('#right-hand');
     const leftHand = document.querySelector('#left-hand');
@@ -32,26 +32,19 @@ function shootFromHand(handEl) {
     const worldPos = new THREE.Vector3();
     const worldDir = new THREE.Vector3();
 
-    // 1. Récupération exacte de la position mondiale de CETte main spécifique
+    // 1. Récupération exacte de la position et de l'orientation mondiale de CETTE main spécifique
     handEl.object3D.getWorldPosition(worldPos);
-
-    // 2. Calcul de la direction propre à cette manette (axe -Z local transformé en monde)
     const localDirection = new THREE.Vector3(0, 0, -1);
     const worldQuaternion = new THREE.Quaternion();
     handEl.object3D.getWorldQuaternion(worldQuaternion);
     worldDir.copy(localDirection).applyQuaternion(worldQuaternion);
 
-    // 3. Raycaster indépendant pour cette arme
-    const raycaster = new THREE.Raycaster(worldPos, worldDir);
-    const targets = Array.from(document.querySelectorAll('.target'));
-    const intersects = raycaster.intersectObjects(targets.map(t => t.object3D), true);
-
-    if (intersects.length > 0) {
-        let targetEl = intersects[0].object.el;
-        
-        while (targetEl && !targetEl.classList.contains('target')) {
-            targetEl = targetEl.parentNode;
-        }
+    // 2. Utilisation directe du Raycaster de la main pour toucher précisément ce que son laser vise
+    const raycasterComp = handEl.components.raycaster;
+    
+    if (raycasterComp && raycasterComp.intersectedEls.length > 0) {
+        // On récupère la première cible valide (.target) touchée par le laser de cette manette
+        const targetEl = raycasterComp.intersectedEls.find(el => el.classList.contains('target'));
 
         if (targetEl && targetEl.parentNode) {
             targetEl.parentNode.removeChild(targetEl);
@@ -63,7 +56,7 @@ function shootFromHand(handEl) {
         }
     }
 
-    // 4. Balle visuelle partie de cette main précise
+    // 3. Balle visuelle rouge partie de cette main précise
     worldPos.addScaledVector(worldDir, 0.2); 
     const bullet = document.createElement('a-sphere');
     bullet.setAttribute('radius', '0.04');
