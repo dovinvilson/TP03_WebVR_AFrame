@@ -1,45 +1,42 @@
-// --- GESTION DU TIR ET DES INTERACTIONS ---
+// --- GESTION DU TIR ET DES INTERACTIONS (DEUX MAINS) ---
 window.addEventListener('DOMContentLoaded', () => {
     const rightHand = document.querySelector('#right-hand');
+    const leftHand = document.querySelector('#left-hand');
     
     // Déclenchement en VR (gâchette du contrôleur droit)
     if (rightHand) {
         rightHand.addEventListener('triggerdown', function () {
-            shootWeapon();
+            shootWeapon(rightHand);
         });
     }
 
-    // Déclenchement sur PC (clic de souris)
+    // Déclenchement en VR (gâchette du contrôleur gauche)
+    if (leftHand) {
+        leftHand.addEventListener('triggerdown', function () {
+            shootWeapon(leftHand);
+        });
+    }
+
+    // Déclenchement de secours (clic de souris PC)
     window.addEventListener('mousedown', () => {
-        shootWeapon();
+        if (rightHand) shootWeapon(rightHand);
     });
 });
 
-function shootWeapon() {
+function shootWeapon(handEl) {
     const scene = document.querySelector('a-scene');
     const hitSound = document.querySelector('#hit-sound');
-    const rightHand = document.querySelector('#right-hand');
-    const cameraEl = document.querySelector('[camera], a-camera');
     
-    if (!scene) return;
+    if (!scene || !handEl) return;
 
     const worldPos = new THREE.Vector3();
     const worldDir = new THREE.Vector3();
 
-    // VÉRIFICATION VR vs PC (Notion de World Position du contrôleur)
-    // Si on est en VR et que le contrôleur droit est connecté et visible dans l'espace
-    if (rightHand && rightHand.object3D && rightHand.object3D.visible) {
-        // Le tir part de la position mondiale (World Position) de la manette droite
-        rightHand.object3D.getWorldPosition(worldPos);
-        
-        // On récupère la direction vers l'avant de la manette
+    // Récupération de la position et de l'orientation mondiale de la main qui tire
+    if (handEl.object3D) {
+        handEl.object3D.getWorldPosition(worldPos);
         const localDir = new THREE.Vector3(0, 0, -1);
-        worldDir.copy(localDir).applyQuaternion(rightHand.object3D.getWorldQuaternion(new THREE.Quaternion()));
-    } else if (cameraEl) {
-        // Mode PC : le tir part de la caméra (milieu de l'écran)
-        cameraEl.object3D.getWorldPosition(worldPos);
-        cameraEl.object3D.getWorldDirection(worldDir);
-        worldDir.negate();
+        worldDir.copy(localDir).applyQuaternion(handEl.object3D.getWorldQuaternion(new THREE.Quaternion()));
     } else {
         return;
     }
@@ -66,7 +63,7 @@ function shootWeapon() {
         }
     }
 
-    // Effet visuel : petite balle rouge rapide qui part un tout petit peu devant la manette pour éviter l'auto-collision
+    // Effet visuel : petite balle rouge rapide qui part de la main active
     worldPos.addScaledVector(worldDir, 0.2); 
     const bullet = document.createElement('a-sphere');
     bullet.setAttribute('radius', '0.04');
@@ -95,7 +92,6 @@ AFRAME.registerComponent('target-spawner', {
         this.spawnInterval = 3000; // Toutes les 3 secondes
         this.timer = 0;
         
-        // Apparition d'une première cible après 1.5 seconde
         setTimeout(() => {
             this.spawnTarget();
         }, 1500);
